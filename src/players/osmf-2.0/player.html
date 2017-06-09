@@ -1,0 +1,140 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+	<head>
+		<title></title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<script type="text/javascript" src="../javascript/swfobject.js"></script>
+		<script type="text/javascript">
+			swfobject.registerObject("flashContent", "10.1.0");
+		</script>
+		<script type="text/javascript">
+
+      function parse_args( query )
+      {
+        var match;
+        // Regex for replacing addition symbol with a space
+        var pl     = /\+/g;
+        var search = /([^&=]+)=?([^&]*)/g;
+        var decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); }
+        var args = {};
+
+        while (match = search.exec(query))
+           args[decode(match[1])] = decode(match[2]);
+
+        return args;
+      }
+
+      var args = parse_args(window.location.search.substring(1));
+
+      function gup( name )
+      {
+        name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+        var regexS = "[\\?&]"+name+"=([^&#]*)";
+        var regex = new RegExp( regexS );
+        var results = regex.exec( window.location.href );
+        if( results == null )
+          return "";
+        else
+          return unescape(results[1]);
+      }
+
+      serialize = function(obj) {
+        var str = [];
+        for(var p in obj)
+        {
+         str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+        }
+        return str.join("&");
+      }
+
+      document.title = "Adobe HTTP Streaming " + gup('file');
+		</script>
+
+    <style type="text/css">
+      html {
+        height: 100%;
+        overflow: hidden;
+      }
+      #flashcontent {
+        height: 100%;
+      }
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background-color: #000;
+      }
+    </style>
+	</head>
+	<body>
+		<div id="flashContent">This will be replaced by the SWF.</div>
+
+<script type="text/javascript">
+  var flashvars = {
+     'id':  'player1',
+     'src': 'http://smoothhd.code-shop.com/video/oceans.ssm/oceans.f4m'
+  };
+
+  // file = http://www.example.com/video.f4m?vbegin=70&vend=100&session_id=123
+  var file = args['file'];
+
+  // parse the file's query parameters
+  if(1)
+  {
+    var query = file.lastIndexOf("?");
+    if(query >= 0)
+    {
+      var file_args = parse_args(file.substr(query + 1));
+      file = file.substr(0, query);
+
+      // *** IMPORTANT ***
+      // OSMF-2.0 is not working with virtual clips. Or to be more exact, it
+      // works with just vend, but *vbegin* is NOT working. It is calculating
+      // the movie duration incorrectly. OSMF-1.0 does work, so does Flowplayer.
+      // *** IMPORTANT ***
+
+      // NOTE: A working solution for OSMF-2.0 is to copy the vbegin value to
+      // the clipStartTime parameter and reset the vbegin value to 0.
+
+      if(file_args['vbegin'])
+      {
+        flashvars['clipStartTime'] = file_args['vbegin'];
+        file_args['vbegin'] = 0;
+      }
+      if(file_args['vend'])
+      {
+        flashvars['clipEndTime'] = file_args['vend'];
+//      file_args['vend'] = 9999;
+      }
+      if(file_args['t'])
+      {
+        var sep = file_args['t'].lastIndexOf("-");
+        flashvars['clipStartTime'] = file_args['t'].substr(0, sep);
+        flashvars['clipEndTime'] = file_args['t'].substr(sep + 1);
+        file_args['t'] = "0-";
+        if(sep >= 0)
+        {
+          file_args['t'] += flashvars['clipEndTime'];
+        }
+      }
+      file += '?' + serialize(file_args);
+    }
+  }
+
+  flashvars['src'] = escape(file);
+
+  var params = {
+     'allowfullscreen':    'true',
+  };
+
+  var attributes = {
+     'name':               'player1'
+  };
+
+   swfobject.embedSWF('StrobeMediaPlayback.swf', 'flashContent', '100%', '100%', '10', 'false', flashvars, params, attributes);
+
+</script>
+
+	</body>
+</html>
+

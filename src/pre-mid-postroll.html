@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Pre-, Mid- and Post-Roll - Remix</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Remix Demo">
+    <meta name="author" content="support@unified=streaming.com">
+    <link rel="icon" href="images/favicon.ico">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      a {color: black; text-decoration: none !important}
+    </style> 
+    <script src="js/jquery.min.js"></script>
+    <script src="js/highcharts.js"></script>
+    <script src="js/exporting.js"></script>
+    <script src="players/dash.js-2.3.0/dist/dash.all.min.js"></script>
+    <script type="text/javascript">
+    // <![CDATA[
+      function escapeHTML(html) {
+        var entityMap = {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': '&quot;',
+          "'": '&#39;',
+          "/": '&#x2F;'
+        };
+
+        return String(html).replace(/[&<>"'\/]/g, function (s) {
+          return entityMap[s];
+        });
+      }
+
+      var players = {
+        "mpd": "dash.js-2.3.0/samples/dash-if-reference-player/index.html",
+        "hls":  "",
+        "hss": "mmp20120605/player.html",
+        "hds": "osmf-2.0/player.html"
+      };
+
+      var formats = {
+        "mpd": ".mpd", 
+        "hls": ".m3u8",
+        "hss": "Manifest",
+        "hds": ".f4m"
+      };
+
+      var labels = {
+        "mpd": "MPEG-DASH", 
+        "hls": "HTTP Live Streaming",
+        "hss": "HTTP Smooth Streaming",
+        "hds": "HTTP Dynamic Streaming"
+      };
+
+      function get_data(url) {
+        var data = '';
+        $.ajax({
+          url: url,
+          type: 'GET',
+          dataType: 'text',
+          success: function(d) {
+            data = d;
+          },
+          error: function (xhr, stat, error) {
+            console.log(stat, error);
+          },
+          async: false,
+          timeout: 100000
+        });
+        return data;
+      }
+
+      function base64url_encode(data) {
+        var b64 = btoa(data);
+        return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, ''); 
+      }
+
+      function get_clip(item, series, clips)
+      {
+        console.log(clips);
+        var serie = {name: clips[item][0], data: [clips[item][1]]};
+        series.unshift(serie);
+      }
+
+      function get_series(i) {
+        var clips = {
+          '2': ['Pre', 5],
+          '3': ['Mid', 5],
+          '4': ['Post', 5],
+          '5': ['Tears of Steel', 30],
+        };
+
+        var items = i.split(',').filter(function(n){ return n != "" }); ;
+        var series = [];
+
+        // copied from improve.php
+        var roll = items[0];
+        var clip = "5";
+        if(roll == "2") // pre
+        {
+          get_clip(roll, series, clips);
+          get_clip(clip, series, clips);
+        }
+        else
+        if(roll == "3") // mid
+        {
+          get_clip(clip, series, clips);
+          get_clip(roll, series, clips);
+          get_clip(clip, series, clips);
+        }
+        else
+        if(roll == "4") // post
+        {
+          get_clip(clip, series, clips);
+          get_clip(roll, series, clips);
+        }
+
+        return series
+      }
+
+      var scheme = ('https:' == document.location.protocol ? 'https://' : 'http://');
+
+      $(document).ready(function () {
+
+        var scheme = ('https:' == document.location.protocol ? 'https:' : 'http:');
+        var host_and_port = document.location.port ? document.location.hostname + ":" + document.location.port : document.location.hostname
+        var unified_origin = scheme + '//' + host_and_port + '/unified-origin';
+        var remix_proxy = scheme + '//' + host_and_port + '/remix-proxy';
+        var smil_proxy = scheme + '//' + host_and_port + '/smil-proxy';
+    
+        var items = '';
+
+        $('input[type=radio]').on('change', function(){
+          if(!!items)
+          {
+            items += ',';
+          }
+          items = $(this).val();
+
+          var rpid = base64url_encode(items);
+          var smil_url = smil_proxy + '/premidpost/' + rpid + '.smil';
+          var remix_url = remix_proxy + '/premidpost/' + rpid + '.mp4';
+          var unified_origin_url = unified_origin + '/remote/premidpost/' + rpid + '.mp4';
+          var xslt_url = 'smil/smil.xsl';
+
+          // print the urls to the smil and mp4
+          $('#smil-url').empty().append(smil_url); 
+          $('#mp4-url').empty().append(remix_url); 
+
+          var smil = get_data(smil_url);
+          var xslt = get_data(xslt_url);
+
+          // print playlist items
+          var processor = new XSLTProcessor();
+          var data = new DOMParser().parseFromString(xslt, "text/xml");
+          processor.importStylesheet(data);
+
+          var xml = $.parseXML(smil);
+          var frag = processor.transformToFragment(xml, document);
+          $('#smil').empty().append(frag);
+          
+          
+          var video = document.getElementById('videoPlayer');
+
+          // pull the remix url through the origin
+          var demo = unified_origin_url;
+
+          // use native HLS player if possible, otherwise dash.js
+          if (document.createElement('video').canPlayType('application/vnd.apple.mpegurl')) {
+            demo += '/.m3u8';
+            video.src = demo;
+            video.load();
+          } else {
+              var player = dashjs.MediaPlayer().create();
+              player.initialize();
+              player.attachView(video);
+              player.attachSource(demo + '/.mpd');
+          }
+          console.log(demo);
+
+          var s = get_series(items);
+
+          $(function () {
+              $('#timeline').highcharts({
+                  chart: {
+                      type: 'bar'
+                  },
+                  title: {
+                      text: ''
+                  },
+                  xAxis: {
+                      categories: ['Clips']
+                  },
+                  yAxis: {
+                      min: 0,
+                      title: {
+                          text: 'Seconds'
+                      }
+                  },
+                  legend: {
+                      reversed: true
+                  },
+                  plotOptions: {
+                      series: {
+                          stacking: 'normal'
+                      }
+                  },
+                  series: s
+              });
+          });
+
+          // create some player links
+          var ahref = '<a href="', hrefend = '">', aend = '</a>';
+          var html = '';
+          var player_uri = '';
+
+          for(var format in formats) {
+            var playout_url = unified_origin_url + '/' + formats[format];
+            if (format == "mpd") {
+              player_uri = 'players/' + players[format] + '?mpd=' + playout_url;
+            } else if (format == "hls") {
+              player_uri = playout_url;
+            } else {
+              player_uri = 'players/' + players[format] + '?file=' + encodeURIComponent(playout_url);
+            }
+            html += ahref + escapeHTML(player_uri) + hrefend + labels[format] + aend + '&emsp;&emsp;';
+          }
+
+          $('#players').empty().append(html);
+
+        });
+      });
+    // ]]>
+    </script>
+
+  </head>
+
+  <body>
+
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="http://www.unified-streaming.com">Unified Streaming</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="http://docs.unified-streaming.com/documentation/package/index.html">Packager</a></li>
+            <li><a href="http://docs.unified-streaming.com/documentation/vod/index.html">VOD</a></li>
+            <li><a href="http://docs.unified-streaming.com/documentation/live/index.html">Live</a></li>
+            <li><a href="http://docs.unified-streaming.com/documentation/drm/index.html">DRM</a></li>
+            <li><a href="http://docs.unified-streaming.com/documentation/capture/live-to-vod.html">Live to VOD</a></li>
+            <li><a href="http://docs.unified-streaming.com/documentation/capture/npvr.html">nPVR</a></li>
+          </ul>
+        </div><!--/.navbar-collapse -->
+      </div>
+    </nav>
+
+    <div class="jumbotron">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-4">
+            <br/><a href="http://docs.unified-streaming.com/documentation/index.html">
+            <h1>Pre-Roll</h1>
+            <p>Mid-Roll and Post-Roll</p>
+            <br/></a>
+          </div>
+          <div class="col-md-8">
+            <br/>
+            <br/>
+            <img src="images/flow.png" class="img-thumbnail" alt="" width="800" height="400">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <div class="row">
+        <div class="col-md-6">
+          <div class="panel panel-success">
+            <div class="panel-heading">
+              <h2>Advertisement</h2>
+              <p>You can select one Ad type.</p>
+            </div>
+            <div class="panel-body">
+              <label class="radio-inline">
+                <input name="radioGroup1" class="roll" id="" value="2" type="radio"> Pre-Roll
+              </label>
+              <label class="radio-inline">
+                <input name="radioGroup1" class="roll" id="" value="3" type="radio"> Mid-Roll
+              </label>
+              <label class="radio-inline">
+                <input name="radioGroup1" class="roll" id="" value="4" type="radio"> Post-Roll
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <div class="page-header">
+            <h1>SMIL</h1>
+          </div>
+          <p>The SMIL URL created for your selection:</p>
+          <div class="well">
+            <div class="placeholder" id="smil-url"></div>
+          </div>
+          <p>The corresponding playlist items:</p>
+          <div class="well">
+            <div class="placeholder" id="smil"></div>
+          </div>
+          <p>And the resulting timeline:</p>
+          <div id="timeline" style="min-width: 210px; max-width: 800px; height: 200px; margin: 0 auto"></div>
+          <div class="page-header">
+            <h1>MP4</h1>
+          </div>
+          <p>The MP4 created from the SMIL playlist:</p>
+          <div class="well">
+            <div class="placeholder" id="mp4-url"></div>
+          </div>
+          <p>MP4 playout:</p>
+          <div class="well">
+            <div class="placeholder" id="mp4"></div>
+            <div class="embed-responsive embed-responsive-16by9" align="center">
+              <video id="videoPlayer" class="embed-responsive-item" controls="true"></video>
+            </div>
+          </div>
+          <p>The unified-origin renders this MP4 to HLS, MPEG-DASH, HDS and HSS with all existing features:</p>
+          <div class="well">
+            <div class="placeholder" id="players"></div>
+          </div>
+        </div> 
+
+      </div> 
+
+      <br/>
+      <br/>
+      <br/>
+
+      <footer class="footer">
+        <div class="text-center">
+          <p>&copy; Unified Streaming 2017</p>
+        </div>
+      </footer>
+
+    </div> <!-- /container -->
+
+  </body>
+</html>
+

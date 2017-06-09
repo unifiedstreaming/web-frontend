@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Unified Remix</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Remix Demo">
+    <meta name="author" content="support@unified=streaming.com">
+    <link rel="icon" href="images/favicon.ico">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <script src="js/jquery.min.js"></script>
+    <script src="js/highcharts.js"></script>
+    <script src="js/exporting.js"></script>
+  </head>
+
+  <body>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="http://www.unified-streaming.com">Unified Streaming</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="http://docs.unified-streaming.com/documentation/package/index.html">Packager</a></li>
+            <li><a href="http://docs.unified-streaming.com/documentation/vod/index.html">VOD</a></li>
+            <li><a href="http://docs.unified-streaming.com/documentation/live/index.html">Live</a></li>
+            <li><a href="http://docs.unified-streaming.com/documentation/drm/index.html">DRM</a></li>
+            <li><a href="http://docs.unified-streaming.com/documentation/capture/live-to-vod.html">Live to VOD</a></li>
+            <li><a href="http://docs.unified-streaming.com/documentation/capture/npvr.html">nPVR</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="jumbotron">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-4">
+            <br/><a style="color: black; text-decoration: none !important" href="http://docs.unified-streaming.com/documentation/index.html">
+            <h1>Remix</h1>
+            <p>Any combination ...</p>
+            <br/></a>
+          </div>
+          <div class="col-md-8">
+            <br/>
+            <br/>
+            <img src="images/flow.png" class="img-thumbnail" alt="" width="800" height="400">
+            <br/>
+            <br/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <div class="row">
+        <div class="page-header">
+          <h1>A new and innovative approach for server side remixing of content</h1>
+        </div>
+        <div class="col-md-6">
+          <div class="panel panel-success">
+            <div class="panel-heading">
+               <h3>Mix</h3>
+            </div>
+            <div class="panel-body">
+              The basic idea of Unified Remix is that it 'mixes' clips from various origins into a single stream. 
+              This means that players do not see any discontinuity, the stream has a single origin and a single timeline. 
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="panel panel-danger">
+            <div class="panel-heading">
+               <h3>Personalize</h3>
+            </div>
+            <div class="panel-body">
+              Viewer info (e.g. session-id or cookie) can be used to personalize streams on 
+              any level. From a personalized stream for every viewer to streams for groups of 
+              viewers (e.g. based on geolocation, subscription model) or even a single 
+              stream for all viewers (e.g. a bumper).
+            </div>
+          </div>
+
+         
+        </div>
+        <div class="col-md-6">
+         <div class="panel panel-info">
+            <div class="panel-heading">
+             <h3>Monetize</h3>
+            </div>
+            <div class="panel-body">
+              Creating a remixed stream opens new doors for content owners to monetize content 
+              but also offers new options for creating personalized streams of for instance  live archives. 
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="panel panel-warning">
+            <div class="panel-heading">
+             <h3>Everywhere</h3>
+            </div>
+            <div class="panel-body">
+              Best of all, Unified Remix will create a stream that plays on all platforms in all 
+              formats and devices and as such it provides a great multiplatform experience. 
+              <br/>
+              <p/>
+              <p/>
+              <p/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="page-header">
+          <h1>Use-Cases</h1>
+        </div>
+
+      <div class="col-md-6">
+          <ul class="list-group">
+            <li class="list-group-item"> Bumper for Everyone (Ratecard, Dubcard, Promo)</li>
+            <li class="list-group-item"> <a href="pre-mid-postroll.html">Pre-, Mid-, Post-Roll (VOD)</a></li>
+            <li class="list-group-item"> <a href="virtual_subclips.html">Virtual Subclips (Highlights or Skip-over)</a></li>
+            <li class="list-group-item"> Archive-to-VOD (Infinite Live archiving)</li>
+          </ul>
+          <ul class="list-group">
+            <li class="list-group-item"> Dynamic Ad Insertion (VOD)</li>
+            <li class="list-group-item"> Watermarking</li>
+            <li class="list-group-item"> Live Scheduling (Rotating 24/7 Playlists) </li>
+            <li class="list-group-item"> Live Remix (DVR window)</li>
+            <li class="list-group-item"> Bumper for Everyone (Live)</li>
+            <li class="list-group-item"> Dynamic Ad Replacement (Live)</li>
+          </ul>
+        </div>
+
+        <div class="col-md-6">
+          <b>Workflow</b>
+          <br/>
+          <br/>
+          <div class="well">
+            First, the SMIL origin creates a SMIL playlist and for 
+            instance could call into an Ad network, use a predefined rule (in the CMS) or even
+            co-operate with the broadcast automation to get EPG info to understand at which 
+            time the clip should be placed. 
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="well">
+            Secondly, Unified Remix creates an MP4 file that references the media listed 
+            in the SMIL playlist. 
+            <br/>
+            <br/>
+            Remix is a webserver module 
+            that handles HTTP request on-the-fly, dynamically. Requests can be forwarded and 
+            cached as it is all HTTP.
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="well">
+            Lastly, the Unified Origin ingests the reference MP4 and creates a single stream
+            without any discontinuity: to a player the stream has a single origin 
+            and a single timeline. 
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6">
+          <div class="page-header">
+            <h2>Bumper for Everyone (VOD)</h2>
+          </div>
+
+          <div class="well">
+            This SMIL Origin creates a SMIL playlist with two entries. The first entry 
+            points to a bumper, and the second entry points to the originally requested media.  
+            The first item is the bumper which is shown to every viewer.
+            <br/>
+            <br/>
+            It can be one and the same bumper for all, or it could be combined with a geolocation 
+            based rule set to for instance show one bumper to viewers from location A and 
+            another bumper to viewers from location B.
+            <br/>
+            <br/>
+            See the next cell for a demo: a pre-roll in essence is the same.
+          </div>
+        </div>
+
+
+        <div class="col-md-6">
+          <div class="page-header">
+            <h2><a href="pre-mid-postroll.html">Pre-, Mid-, Post-Roll (VOD)</a></h2>
+          </div>
+
+          <div class="well">
+            This SMIL Origin creates a SMIL playlist with pre-, mid- and postroll 
+            entries. Any combination is allowed. 
+            <br/>
+            <br/>
+            Which combination and which items can be determined by a recommendation service or a rule 
+            set accessed from the CMS based on the viewer info that is passed from the player 
+            (e.g. session-id or cookie).
+            <br/>
+            <br/>
+            <a href="pre-mid-postroll.html">Click here for a demo.</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <div class="page-header">
+            <h2>Archive-to-VOD<h2>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="well">
+            Creating a scalable, performing and reliable catch-up TV or nPVR service can be challenging. 
+            <br/>
+            <br/>
+            How to deal with fast turn around times for the creation of VOD clips but 
+            also how long will you allow your viewers to go back in time?
+            <br/>
+            <br/>
+            Could you offer an infinite live archiving solution that also greatly 
+            reduces the creation time of clips?  
+            <br/>
+            <br/>
+            Unified Remix provides
+            <br/>
+            - instantly available clips
+            <br/>
+            - scale,  as it’s just files - no database
+            <br/>
+            - playout from the archive with new ads or without ads 
+              (by mapping the EPG to the player URL).
+            <br/>
+            - straightforward integration in catch-up TV or nPVR workflows 
+              (by mapping archived content to the player URL). 
+            <br/>
+            <br/>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="well">
+            Unified Remix creates a SMIL playlist and reference MP4 from archived content which the
+            Unified Origin then streams to what the player requested.
+            <br/>
+            <br/>
+            Moving the content from the publishing point (the origin that is ingesting the 
+            live stream sent by the encoder) to long-term archive can be achieved using a batch process. 
+          </div>
+        </div>
+
+        <div class="col-md-6">
+            Schematically this looks like the following:
+            <br/>
+            <img src="images/archive2vod.png" class="img-thumbnail" alt="" width="800" height="400">
+        </div> 
+
+        <div class="col-md-6">
+        <br/>
+        <br/>
+        </div> 
+      </div> 
+
+      <div class="row">
+        <div class="col-md-6">
+          <div class="page-header">
+            <h2>Watermarking</h2>
+          </div>
+            <div class="well">
+              Watermarking of video streams can be one by marking certain fragments 
+              in a certain order. The mark itself will be embedded in to the encoded 
+              video or audio, the selection pattern may look like a bit pattern, 
+              e.g. '0100011000' etc.
+              <br/>
+              <br/>
+              When for instance a playlist is created from two sources (one un-marked, 
+              one marked) Remix then can resolve this playlist to an MP4 as input for 
+              the origin.
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="page-header">
+              <h2>Dynamic Ad Insertion</h2>
+            </div>
+            <div class="well">
+              This SMIL Origin takes information from the CMS (session, cookies, etc) 
+              and transforms it into a call into the Ad Network. The list of Ad Content 
+              that is the best match for this viewer is returned by the Ad Network.
+              <br/>
+              <br/>
+              VAST may be used for the communication with the Ad Network.
+            </div>
+          </div>
+        </div> 
+      </div> 
+
+
+      <br/>
+      <br/>
+      <br/>
+
+      <footer class="footer">
+        <div class="text-center">
+          <p>&copy; Unified Streaming 2016-2017</p>
+        </div>
+      </footer>
+
+    </div> <!-- /container -->
+
+    <!--script src="js/jquery.2.1.1.min.js"></script>
+    <script src="js/bootstrap.3.2.0.min.js"></script-->
+
+  </body>
+</html>
+

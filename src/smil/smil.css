@@ -1,0 +1,21 @@
+/* smil.css */
+
+body {
+  display: block;
+  width: 100%;
+}
+.seq {
+  display: block;
+}
+.par {
+  display: block;
+}
+.video {
+  display: block;
+}
+.partial {
+  color: #23527c;
+}
+.partial:after {
+  content: " (partial)";
+}

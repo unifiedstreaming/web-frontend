@@ -1,0 +1,138 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<!-- saved from url=(0014)about:internet -->
+<head>
+    <title>Adaptive Streaming Silverlight Player</title>
+
+    <style type="text/css">
+    html, body {
+	    height: 100%;
+	    overflow: auto;
+    }
+    body {
+	    padding: 0;
+	    margin: 0;
+    }
+    #silverlightControlHost {
+	    height: 100%;
+    }
+    </style>
+    
+    <script type="text/javascript">
+      // <![CDATA[
+      function escapeHTML( html ) {
+        var entityMap =
+        {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': '&quot;',
+          "'": '&#39;',
+          "/": '&#x2F;'
+        };
+
+        return String(html).replace(/[&<>"'\/]/g, function (s) {
+          return entityMap[s];
+        });
+      }
+
+      function gup( name )
+      {
+        name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+        var regexS = "[\\?&]"+name+"=([^&#]*)";
+        var regex = new RegExp( regexS );
+        var results = regex.exec( window.location.href );
+        if( results == null )
+          return "";
+        else
+          return results[1];
+      }
+//      document.title = "Silverlight HTTP Streaming " + gup('file');
+
+        function onSilverlightError(sender, args) {
+        
+            var appSource = "";
+            if (sender != null && sender != 0) {
+                appSource = sender.getHost().Source;
+            } 
+            var errorType = args.ErrorType;
+            var iErrorCode = args.ErrorCode;
+            
+            var errMsg = "Unhandled Error in Silverlight Application " +  appSource + "\n" ;
+
+            errMsg += "Code: "+ iErrorCode + "    \n";
+            errMsg += "Category: " + errorType + "       \n";
+            errMsg += "Message: " + args.ErrorMessage + "     \n";
+
+            if (errorType == "ParserError")
+            {
+                errMsg += "File: " + args.xamlFile + "     \n";
+                errMsg += "Line: " + args.lineNumber + "     \n";
+                errMsg += "Position: " + args.charPosition + "     \n";
+            }
+            else if (errorType == "RuntimeError")
+            {           
+                if (args.lineNumber != 0)
+                {
+                    errMsg += "Line: " + args.lineNumber + "     \n";
+                    errMsg += "Position: " +  args.charPosition + "     \n";
+                }
+                errMsg += "MethodName: " + args.methodName + "     \n";
+            }
+
+            throw new Error(errMsg);
+        }
+    // ]]>
+  </script>
+</head>
+
+<body>
+    <!-- Runtime errors from Silverlight will be displayed here.
+	This will contain debugging information and should be removed or hidden when debugging is completed -->
+	<div id='errorLocation' style="font-size: small;color: Gray;"></div>
+
+    <div id="silverlightControlHost">
+
+    <script type="text/javascript">
+      var vars = {
+        'source':               "SmoothStreamingPlayer.xap",
+        'onerror':              "onSilverlightError",
+        'autoUpgrade':          "true",
+        'background':           "white",
+        'enableHtmlAccess':     "true",
+        'minRuntimeVersion':    "4.0.50401.0",
+        'EnableGPUAcceleration':"true"
+      };
+
+      var initparams = "";
+      initparams += "autoload=false";
+      initparams += ", autoplay=true";
+      initparams += ", displaytimecode=false";
+      initparams += ", enablecaptions=true";
+      initparams += ", joinLive=true";
+      initparams += ", muted=false";
+      initparams += ", selectedcaptionstream=" + gup('text');
+      initparams += ", PlayerGraphVisibility=Visible";
+      initparams += ", mediaurl=" + decodeURIComponent(gup('file'));
+      vars['initparams'] = initparams;
+//      alert(initparams);
+//      alert(gup('text'));
+
+//      vars['initparams'] = 'autoload=false, autoplay=true, displaytimecode=false, enablecaptions=true, joinLive=true, muted=false, mediaurl= ' + gup('file');
+
+      document.write('<object data="data:application/x-silverlight," type="application/x-silverlight" width="100%" height="100%">');
+      for(name in vars)
+      {
+        document.write('<param name="' + name +
+                            '" value="' + escapeHTML(vars[name]) + '" />');
+      }
+
+      document.write(' <a href="http://go.microsoft.com/fwlink/?LinkID=124807" style="text-decoration: none;"> <img src="http://go.microsoft.com/fwlink/?LinkId=108181" alt="Get Microsoft Silverlight" style="border-style: none"/> </a>');
+
+      document.write('</object>');
+    </script>
+		<iframe style='visibility:hidden;height:0;width:0;border:0px'></iframe>
+    </div>
+</body>
+</html>
+

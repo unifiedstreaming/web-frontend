@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Virtual Subclips</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Virtual Subclips Demo" />
+    <meta name="author" content="support@unified=streaming.com" />
+    <link rel="icon" href="images/favicon.ico" />
+    <link href="css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+      a {color: black; text-decoration: none !important}
+    </style> 
+    <script src="js/jquery.min.js"></script>
+    <script src="js/vkbeautify.0.99.00.beta.js"></script>
+    <script src="js/jquery.mask.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="players/dash.js-2.3.0/dist/dash.all.min.js"></script>
+    <script type="text/javascript">
+    // <![CDATA[
+      function escapeHTML(html) {
+        var entityMap = {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': '&quot;',
+          "'": '&#39;',
+          "/": '&#x2F;'
+        };
+
+        return String(html).replace(/[&<>"'\/]/g, function (s) {
+          return entityMap[s];
+        });
+      }
+
+      var players = {
+        "mpd": "dash.js-2.3.0/samples/dash-if-reference-player/index.html",
+        "hls":  "",
+        "hss": "mmp20120605/player.html",
+        "hds": "osmf-2.0/player.html"
+      };
+
+      var formats = {
+        "mpd": ".mpd", 
+        "hls": ".m3u8",
+        "hss": "Manifest",
+        "hds": ".f4m"
+      };
+
+      var labels = {
+        "mpd": "MPEG-DASH", 
+        "hls": "HTTP Live Streaming",
+        "hss": "HTTP Smooth Streaming",
+        "hds": "HTTP Dynamic Streaming"
+      };
+
+      var items = {};
+
+      var scheme = ('https:' == document.location.protocol ? 'https:' : 'http:');
+      var host_and_port = document.location.port ? document.location.hostname + ":" + document.location.port : document.location.hostname
+      var unified_origin = scheme + '//' + host_and_port + '/unified-origin';
+      var remix_proxy = scheme + '//' + host_and_port + '/remix-proxy';
+      var smil_proxy = scheme + '//' + host_and_port + '/smil-proxy';
+
+      function get_data(url) {
+        var data = '';
+        $.ajax({
+          url: url,
+          type: 'GET',
+          dataType: 'text',
+          success: function(d) {
+            data = d;
+          },
+          error: function (xhr, stat, error) {
+            console.log(stat, error);
+          },
+          async: false,
+          timeout: 100000
+        });
+        return data;
+      }
+
+      function update_json() {
+        items['movies'] = {};
+        $('#subclips').find('.movie').each(function(i) {
+          items['movies'][i] = {};
+          items['movies'][i]['url'] = $('input[name=url\\[\\]]').eq(i).val();
+          items['movies'][i]['segments'] = {};
+          $(this).find('.entry').each(function(j) {
+            items['movies'][i]['segments'][j] = {
+                'tc_in': $(this).find('input[name=tc_in\\[\\]]').val(),
+                'tc_out': $(this).find('input[name=tc_out\\[\\]]').val()
+            };
+          });
+        });
+        console.log(JSON.stringify(items));
+        update_urls();
+      }
+
+      function update_subclip() {
+        items['segments']= {};
+        $('span[name=subclip_no\\[\\]]').each(function(index) {
+          items['segments'][index] = {}
+          items['segments'][index]['tc_in'] = $('input[name=tc_in\\[\\]]').eq(index).val();
+          items['segments'][index]['tc_out'] = $('input[name=tc_out\\[\\]]').eq(index).val();
+        });
+        update_urls();
+      }
+
+      function update_urls() {
+        var rpid = btoa(JSON.stringify(items));
+        var smil_url = smil_proxy + '/virtual_subclips/' + rpid + '.smil';
+        var remix_url = remix_proxy + '/virtual_subclips/' + rpid + '.mp4';
+
+        // print the urls to the smil and mp4
+        $('#smil-url').empty().append(smil_url); 
+        $('#mp4-url').empty().append(remix_url); 
+
+        var smil = get_data(smil_url);
+        $('#smil').text(vkbeautify.xml(smil));
+
+      }
+
+      function update_video() {
+        var rpid = btoa(JSON.stringify(items));
+        var smil_url = smil_proxy + '/virtual_subclips/' + rpid + '.smil';
+        var remix_url = remix_proxy + '/virtual_subclips/' + rpid + '.mp4';
+        var unified_origin_url = unified_origin + '/remote/virtual_subclips/' + rpid + '.mp4';
+
+        var video = document.getElementById('videoPlayer');
+
+        var demo = unified_origin_url;
+
+        // use native HLS player if possible, otherwise dash.js
+        if (document.createElement('video').canPlayType('application/vnd.apple.mpegurl')) {
+          demo += '/.m3u8';
+          video.src = demo;
+          video.load();
+        } else {
+            var player = dashjs.MediaPlayer().create();
+            player.initialize();
+            player.attachView(video);
+            player.attachSource(demo + '/.mpd');
+        }
+        console.log(demo);
+
+        // create some player links
+        var ahref = '<a href="', hrefend = '">', aend = '</a>';
+        var html = '';
+        var player_uri = '';
+
+        for(var format in formats) {
+          var playout_url = unified_origin_url + '/' + formats[format];
+          if (format == "mpd") {
+            player_uri = 'players/' + players[format] + '?autoplay=true&mpd=' + playout_url;
+          } else 
+          if (format == "mpd2") {
+            player_uri = players[format] + playout_url;
+          } else 
+          if (format == "hls") {
+            player_uri = playout_url;
+          } else {
+            player_uri = 'players/' + players[format] + '?file=' + encodeURIComponent(playout_url);
+          }
+          html += ahref + escapeHTML(player_uri) + hrefend + labels[format] + aend + '&emsp;&emsp;';
+        }
+
+        $('#players').empty().append(html);
+      }
+
+
+      $(document).ready(function () {
+
+        update_json();
+        update_video();
+
+        var multiple_movie_warned = false;
+
+        $(document).on('click', '.add-subclip', function(e) {
+          e.preventDefault();
+
+          var controlForm = $('#subclips'),
+              currentEntry = $(this).parents('.entry:first'),
+              newEntry = $(currentEntry.clone()).insertAfter(currentEntry),
+              movie = $(this).parents('.movie:first');
+
+          newEntry.find('input').val('');
+          
+          movie.find('.remove-subclip')
+              .addClass('btn-remove').addClass('btn-danger');
+
+          $(this).parents('.movie:first').find('span[name=subclip_no\\[\\]]').each(function(index){
+            $(this).text(index+1);
+          });
+          $('input[name=tc_in\\[\\]]').on('change', update_json);
+          $('input[name=tc_out\\[\\]]').on('change', update_json);
+          update_json();
+          update_urls();
+        }).on('click', '.btn-remove, .remove-subclip', function(e) {
+          var movie = $(this).parents('.movie:first');
+          $(this).parents('.entry:first').remove();
+          
+          movie.find('span[name=subclip_no\\[\\]]').each(function(index){
+            $(this).text(index+1);
+          });
+          if (movie.find('.entry').length === 1) {
+            movie.find('.remove-subclip')
+              .removeClass('btn-remove').removeClass('btn-danger');
+          } 
+          update_json();
+          update_urls();
+          e.preventDefault();
+          return false;
+        });
+
+        $(document).on('click', '.add-movie', function(e) {
+          e.preventDefault();
+
+          var controlForm = $('#subclips'),
+              currentEntry = $(this).parents('.movie:first'),
+              newEntry = $(currentEntry.clone()).insertAfter(currentEntry);
+
+          newEntry.find('input').val('');
+          newEntry.find('.entry:not(:first)').remove();
+
+          controlForm.find('.remove-movie')
+              .addClass('btn-remove').addClass('btn-danger');
+
+          // renumber
+          $('span[name=movie_no\\[\\]]').each(function(index) {
+            $(this).text(index+1);
+          });
+
+          newEntry.find('span[name=subclip_no\\[\\]]').each(function(index){
+            $(this).text(index+1);
+          });
+
+          if (!multiple_movie_warned) {
+            $('#movie-alerts').empty().append('<div class="alert alert-info alert-dismissable"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button><strong>Note!</strong> When using multiple input movies their encoding should match to avoid player problems.</div></div>');
+            multiple_movie_warned = true;
+          }
+          
+
+          $('input[name=url\\[\\]]').on('change', update_json);
+          $('input[name=tc_in\\[\\]]').on('change', update_json);
+          $('input[name=tc_out\\[\\]]').on('change', update_json);
+          update_json();
+          update_urls();
+        }).on('click', '.btn-remove, .remove-movie', function(e) {
+          $(this).parents('.movie:first').remove();
+
+          // renumber
+          $('span[name=movie_no\\[\\]]').each(function(index) {
+            $(this).text(index+1);
+          });
+          if ($('#subclips').find('.movie').length === 1) {
+            $('#subclips').find('.remove-movie')
+              .removeClass('btn-remove').removeClass('btn-danger');
+          };
+          update_json();
+          update_urls();
+          e.preventDefault();
+          return false;
+        });
+
+        $('input[name=url\\[\\]]').on('change', update_json);
+        $('input[name=tc_in\\[\\]]').on('change', update_json);
+        $('input[name=tc_out\\[\\]]').on('change', update_json);
+        $('button[id=update-vid]').on('click', function() {
+          update_video();
+          $('html, body').animate({
+            scrollTop: $("#videoPlayer").offset().top
+          }, 500);
+        });
+        $('.timecode').mask('00:00:00:00');
+      });
+    // ]]>
+    </script>
+
+  </head>
+
+  <body>
+
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="http://www.unified-streaming.com">Unified Streaming</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="http://docs.unified-streaming.com/documentation/package/index.html">Packager</a></li>
+            <li><a href="http://docs.unified-streaming.com/documentation/vod/index.html">VOD</a></li>
+            <li><a href="http://docs.unified-streaming.com/documentation/live/index.html">Live</a></li>
+            <li><a href="http://docs.unified-streaming.com/documentation/drm/index.html">DRM</a></li>
+            <li><a href="http://docs.unified-streaming.com/documentation/capture/live-to-vod.html">Live to VOD</a></li>
+            <li><a href="http://docs.unified-streaming.com/documentation/capture/npvr.html">nPVR</a></li>
+          </ul>
+        </div><!--/.navbar-collapse -->
+      </div>
+    </nav>
+
+    <div class="jumbotron">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-4">
+            <br/><a href="http://docs.unified-streaming.com/documentation/index.html">
+            <h1>Virtual Subclips</h1>
+            <br/></a>
+          </div>
+          <div class="col-md-8">
+            <br/>
+            <br/>
+            <img src="images/flow.png" class="img-thumbnail" alt="" width="800" height="400" />
+          </div> 
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="panel panel-success">
+            <div class="panel-heading">
+              <h2>Movies</h2>
+              <p>Enter movie URL and subclips</p>
+            </div>
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-xs-1"></div>
+                <div class="col-xs-10" id="movie-alerts">
+              </div>
+              <div class="row">
+                <div class="control-group" id="fields">
+                  <div class="controls"> 
+                    <form id="subclips" role="form" autocomplete="off">
+                      <div class="movie">
+                        <div class="row" align="center">
+                          <div class="col-xs-12">
+                            <div class="col-xs-11 input-group">
+                              <span class="input-group-addon" name="movie_no[]">1</span> 
+                              <input type="text" class="form-control" value="http://sample-content/tears-of-steel-dref.mp4" id="movie" name="url[]" />
+                              <span class="input-group-btn">
+                                <button class="btn remove-movie" type="button">
+                                  <div class="glyphicon glyphicon-minus"></div>
+                                </button>
+                                <button class="btn btn-success btn-add add-movie" type="button">
+                                  <div class="glyphicon glyphicon-plus"></div>
+                                </button>
+                              </span>
+                            </div>
+                            <div class="col-xs-1" />
+                          </div>
+                        </div>
+                        <div class="entry row">
+                          <div class="col-xs-2">
+                            <h4 class="text-right"><span name="subclip_no[]">1</span></h4>
+                          </div>
+                          <div class="col-xs-3">
+                            <input class="form-control timecode" name="tc_in[]" type="text" placeholder="TC In" value="00:05:00:00"/>
+                          </div>
+                          <div class="col-xs-3">
+                            <input class="form-control timecode" name="tc_out[]" type="text" placeholder="TC Out" value="00:06:00:00"/>
+                          </div>
+                          <div class="col-xs-1">
+                          <span class="input-group-btn">
+                            <button class="btn remove-subclip" type="button">
+                              <div class="glyphicon glyphicon-minus"></div>
+                            </button>
+                            <button class="btn btn-success btn-add add-subclip" type="button">
+                              <div class="glyphicon glyphicon-plus"></div>
+                            </button>
+                            </span>
+                          </div>
+                        </div>
+                        <div class="entry row">
+                          <div class="col-xs-2">
+                            <h4 class="text-right"><span name="subclip_no[]">1</span></h4>
+                          </div>
+                          <div class="col-xs-3">
+                            <input class="form-control timecode" name="tc_in[]" type="text" placeholder="TC In" value="00:01:00:00"/>
+                          </div>
+                          <div class="col-xs-3">
+                            <input class="form-control timecode" name="tc_out[]" type="text" placeholder="TC Out" value="00:02:00:00"/>
+                          </div>
+                          <div class="col-xs-1">
+                          <span class="input-group-btn">
+                            <button class="btn remove-subclip" type="button">
+                              <div class="glyphicon glyphicon-minus"></div>
+                            </button>
+                            <button class="btn btn-success btn-add add-subclip" type="button">
+                              <div class="glyphicon glyphicon-plus"></div>
+                            </button>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div align="center">
+                  <button class="btn btn-success" id="update-vid" type="button">Create virtual clip</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <div class="page-header">
+            <h1>SMIL</h1>
+          </div>
+          <p>The SMIL URL created for your selection:</p>
+          <div class="well">
+            <pre class="placeholder" id="smil-url"></pre>
+          </div>
+          <p>The SMIL itself:</p>
+          <div class="well">
+            <pre id="smil"></pre>
+          </div>
+          <div class="page-header">
+            <h1>MP4</h1>
+          </div>
+          <p>The MP4 created from the SMIL playlist:</p>
+          <div class="well">
+            <pre class="placeholder" id="mp4-url"></pre>
+          </div>
+          <p>MP4 playout:</p>
+          <div class="well">
+            <div class="placeholder" id="mp4"></div>
+            <div class="embed-responsive embed-responsive-16by9" align="center">
+              <video id="videoPlayer" class="embed-responsive-item" controls="true"></video>
+            </div>
+          </div>
+          <p>The unified-origin renders this MP4 to HLS, MPEG-DASH, HDS and HSS with all existing features:</p>
+          <div class="well">
+            <div class="placeholder" id="players"></div>
+          </div>
+        </div> 
+
+      </div> 
+
+      <br/>
+      <br/>
+      <br/>
+
+      <footer class="footer">
+        <div class="text-center">
+          <p>&copy; Unified Streaming 2017</p>
+        </div>
+      </footer>
+
+    </div> <!-- /container -->
+  </body>
+</html>

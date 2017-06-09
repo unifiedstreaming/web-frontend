@@ -1,0 +1,24 @@
+# Remix web front end demo
+
+ServerName demo
+
+LogFormat {{LOG_FORMAT}} log_format
+
+<VirtualHost *:80>
+  CustomLog /dev/stdout log_format
+  ErrorLog /dev/stderr
+
+  LogLevel {{LOG_LEVEL}}
+
+  # DocumentRoot: The directory out of which you will serve your
+  # documents. By default, all requests are taken from this directory, but
+  # symbolic links and aliases may be used to point to other locations.
+  DocumentRoot /var/www/demo
+
+  <Directory /var/www/demo>
+    Require all granted
+  </Directory>
+
+  # Deny directory listing
+  Options -Indexes
+</VirtualHost>
