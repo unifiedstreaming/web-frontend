@@ -1,12 +1,12 @@
 #!/bin/sh
 
 # set env vars to defaults if not already set
-if [ ! $LOG_LEVEL ]
+if [ -z "$LOG_LEVEL" ]
   then
   export LOG_LEVEL=warn
 fi
 
-if [ ! $LOG_FORMAT ]
+if [ -z "$LOG_FORMAT" ]
   then
   export LOG_FORMAT="%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\" \"%{cache-status}e\" \"%{remix_request_id}i\" %D"
 fi
